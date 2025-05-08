@@ -17,8 +17,6 @@ export class CustomerDetails {
   id: number;
 
   @Column()
-  @OneToOne(() => Customer)
-  @JoinColumn({ name: 'customer_id' })
   customer_id: number;
 
   @Column()
@@ -70,6 +68,7 @@ export class CustomerDetails {
   deletedBy?: string;
 
   @OneToOne(() => Customer, (customer) => customer.details)
+  @JoinColumn({ name: 'customer_id' })
   customer: Customer;
 }
 

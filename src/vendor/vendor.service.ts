@@ -4,6 +4,7 @@ import { Repository, DataSource, ILike } from 'typeorm';
 import { Vendor } from '../entities/vendor.entity';
 import { VendorDetails } from '../entities/vendor_details.entity';
 import { VendorServices } from '../entities/vendor_services.entity';
+import { VendorDocuments } from '../entities/vendor_documents.entity';
 import { Users } from '../entities/users.entity';
 
 @Injectable()
@@ -12,38 +13,57 @@ export class VendorsService {
     @InjectRepository(Vendor) private vendorRepo: Repository<Vendor>,
     @InjectRepository(VendorDetails) private vendorDetailsRepo: Repository<VendorDetails>,
     @InjectRepository(VendorServices) private vendorServicesRepo: Repository<VendorServices>,
+    @InjectRepository(VendorDocuments) private vendorDocumentsRepo: Repository<VendorDocuments>,
     @InjectRepository(Users) private userRepo: Repository<Users>,
     private dataSource: DataSource,
   ) {}
 
   async create(data: any) {
     return await this.dataSource.transaction(async (manager) => {
-      const vendor = manager.create(Vendor, data);
+      const vendor = manager.create(Vendor, {
+        name: data.name,
+        email: data.email,
+        mobile: data.mobile,
+        age: data.age,
+        status: data.status,
+        organization_id: data.organization_id || 1,
+      });
+      
       const savedVendor = await manager.save(vendor);
 
       const vendorDetails = manager.create(VendorDetails, {
-        ...data,
+        ...data.details,
         vendor_id: savedVendor.id,
       });
       await manager.save(vendorDetails);
 
-      const vendorServices = data.services.map((service) =>
-        manager.create(VendorServices, {
+      if (data.documents) {
+        const vendorDocuments = manager.create(VendorDocuments, {
+          ...data.documents,
           vendor_id: savedVendor.id,
-          service_id: service.service_id,
-          sub_service_id: service.sub_service_id,
-          created_by: data.created_by,
-          updated_by: data.created_by,
-        }),
-      );
-      await manager.save(vendorServices);
+        });
+        await manager.save(vendorDocuments);
+      }
+
+      if (data.services) {
+        const vendorServices = data.services.map((service) =>
+          manager.create(VendorServices, {
+            vendor_id: savedVendor.id,
+            service_id: service.service_id,
+            sub_service_id: service.sub_service_id,
+            created_by: data.created_by,
+            updated_by: data.created_by,
+          }),
+        );
+        await manager.save(vendorServices);
+      }
 
       const user = manager.create(Users, {
         user_name: data.name,
         email: data.email,
         mobile_no: data.mobile,
-        password: data.password,
-        organization_id: data.organization_id,
+        password: data.password || "123",
+        organization_id: data.organization_id || 1,
       });
       await manager.save(user);
 

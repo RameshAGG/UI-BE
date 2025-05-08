@@ -80,7 +80,7 @@ async findAll(search?: string): Promise<Customer[]> {
 
   return this.customerRepo.find({
     where,
-    relations: ['details', 'documents', 'devices', 'requests'],
+    relations: ['details', 'documents'],
   });
 }
 
