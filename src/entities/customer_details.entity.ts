@@ -4,7 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
+  OneToOne,
   JoinColumn,
   DeleteDateColumn,
   Unique,
@@ -17,6 +17,8 @@ export class CustomerDetails {
   id: number;
 
   @Column()
+  @OneToOne(() => Customer)
+  @JoinColumn({ name: 'customer_id' })
   customer_id: number;
 
   @Column()
@@ -67,8 +69,7 @@ export class CustomerDetails {
   @Column({ nullable: true })
   deletedBy?: string;
 
-  @ManyToOne(() => Customer, (customer) => customer.details)
-  @JoinColumn({ name: 'customer_id' })
+  @OneToOne(() => Customer, (customer) => customer.details)
   customer: Customer;
 }
 

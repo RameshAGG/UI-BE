@@ -4,7 +4,6 @@ import {
   Column,
   OneToOne,
   OneToMany,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
@@ -47,12 +46,10 @@ export class Customer {
   @Column({ nullable: true })
   deletedBy?: string;
 
-  @OneToOne(() => CustomerDetails, (details) => details.customer, { cascade: true })
-  @JoinColumn({ name: 'id', referencedColumnName: 'customer_id' })
+  @OneToOne(() => CustomerDetails, (details) => details.customer)
   details: CustomerDetails;
 
   @OneToOne(() => CustomerDocuments, (docs) => docs.customer, { cascade: true })
-  @JoinColumn({ name: 'id', referencedColumnName: 'customer_id' })
   documents: CustomerDocuments;
 
   @OneToMany(() => CustomerDevices, (device) => device.customer, { cascade: true })

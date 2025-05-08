@@ -9,19 +9,22 @@ import { VendorsModule } from './vendor/vendor.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { MasterModule } from './master/master.module';
 import { SubServiceMasterModule } from './sub-master/submaster.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT || '5432', 10),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: 'root',
+      database: 'casecare',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
       synchronize: false,
+      migrationsRun: true,
+      migrationsTableName: 'migrations',
     }),
     UsersModule,
     AuthModule,
