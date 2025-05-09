@@ -39,7 +39,7 @@ export class AssignmentsService {
   // Method to fetch customer assignments
   async getCustomerAssignments() {
     const requests = await this.customerRequestRepo.find({
-      relations: ['customer'],  // Fetch related customer data
+      relations: ['customer', 'service', 'subService'],  // Added service and subService relations
       order: { id: 'ASC' },
     });
 
@@ -47,8 +47,10 @@ export class AssignmentsService {
       s_no: index + 1,
       id: req.customer?.id,
       customer_name: req.customer?.name,
-      service_id: req.service_id,  // care_category refers to service_id
-      sub_service_id: req.sub_service_id,  // care_type refers to sub_service_id
+      service_id: req.service_id,
+      service_name: req.service?.name,  // Added service name
+      sub_service_id: req.sub_service_id,
+      sub_service_name: req.subService?.name,  // Added sub-service name
       request_date: req.created_at,
       assign: true,
     }));

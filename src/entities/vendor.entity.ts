@@ -5,7 +5,8 @@ import {
   OneToOne,
   OneToMany,
   CreateDateColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
+  DeleteDateColumn
 } from 'typeorm';
 import { VendorDetails } from './vendor_details.entity';
 import { VendorServices } from './vendor_services.entity';
@@ -39,6 +40,9 @@ export class Vendor {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt: Date;
 
   @OneToOne(() => VendorDetails, (details) => details.vendor, { cascade: true })
   vendorDetails: VendorDetails;

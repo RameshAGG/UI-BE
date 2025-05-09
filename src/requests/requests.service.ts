@@ -54,7 +54,17 @@ export class RequestsService {
   }  
 
   async update(id: number, data: Partial<CustomerRequests>) {
-    return await this.requestRepo.update(id, data);
+    // Filter out invalid fields and only keep the ones that exist in CustomerRequests entity
+    const validFields = {
+      customer_id: data.customer_id,
+      vendor_id: data.vendor_id,
+      service_id: data.service_id,
+      sub_service_id: data.sub_service_id,
+      created_by: data.created_by,
+      updated_by: data.updated_by
+    };
+    
+    return await this.requestRepo.update(id, validFields);
   }
 
   async remove(id: number) {
