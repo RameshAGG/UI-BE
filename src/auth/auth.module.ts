@@ -12,13 +12,9 @@ import { JwtStrategy } from './jwt.strategy';
   imports: [
     UsersModule, // Ensure UsersModule is imported
     PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN') },
-      }),
+    JwtModule.register({
+      secret: 'mySecretKey123!',
+      signOptions: { expiresIn: '1h' },
     }),
   ],
   controllers: [AuthController], // This ensures AuthController is mapped
