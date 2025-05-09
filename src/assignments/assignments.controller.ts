@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AssignmentsService } from './assignments.service';
 
 @Controller('assignments')
@@ -22,9 +22,9 @@ export class AssignmentsController {
   }
 
   // Endpoint to get vendor assignments
-  @Get('vendors')
-  getVendorAssignments() {
-    return this.assignmentService.getVendorAssignments();
+  @Get('vendors/:id')
+  getVendorAssignments(@Param('id') id: number) {
+    return this.assignmentService.getVendorAssignments(id);
   }
 }
 
