@@ -26,6 +26,12 @@ export class AssignmentsController {
   getVendorAssignments(@Param('id') id: number) {
     return this.assignmentService.getVendorAssignments(id);
   }
+
+  // Endpoint to get all customer requests
+  @Get('requests')
+  getCustomerRequests() {
+    return this.assignmentService.getCustomerRequests();
+  }
 }
 
 

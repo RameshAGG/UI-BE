@@ -51,7 +51,7 @@ export class AssignmentsService {
       customer_id: data.customer_id,
       vendor_id: data.vendor_id,
       care_category: service?.name || 'Default Service',
-      care_type: 'Regular', // You can modify this based on your requirements
+      care_type: 'Regular', 
       request_date: new Date()
     });
 
@@ -62,7 +62,7 @@ export class AssignmentsService {
   // Method to fetch customer assignments
   async getCustomerAssignments() {
     const requests = await this.customerRequestRepo.find({
-      relations: ['customer', 'service', 'subService'],  // Added service and subService relations
+      relations: ['customer', 'service', 'subService', 'vendor'],
       order: { id: 'ASC' },
     });
 
@@ -70,10 +70,12 @@ export class AssignmentsService {
       s_no: index + 1,
       id: req.customer?.id,
       customer_name: req.customer?.name,
+      vendor_id: req.vendor_id,
+      vendor_name: req.vendor?.name,
       service_id: req.service_id,
-      service_name: req.service?.name,  // Added service name
+      service_name: req.service?.name,
       sub_service_id: req.sub_service_id,
-      sub_service_name: req.subService?.name,  // Added sub-service name
+      sub_service_name: req.subService?.name,
       request_date: req.created_at,
       assign: true,
     }));
@@ -95,6 +97,30 @@ export class AssignmentsService {
       service_name: vs.service?.name,
       date: vs.created_at,  
       assign: true,
+    }));
+  }
+
+  // Method to fetch all customer requests
+  async getCustomerRequests() {
+    const requests = await this.customerRequestRepo.find({
+      relations: ['customer', 'vendor', 'service', 'subService'],
+      order: { id: 'DESC' },
+    });
+
+    return requests.map((req, index) => ({
+      s_no: index + 1,
+      request_id: req.id,
+      customer_id: req.customer_id,
+      customer_name: req.customer?.name,
+      vendor_id: req.vendor_id,
+      vendor_name: req.vendor?.name,
+      service_id: req.service_id,
+      service_name: req.service?.name,
+      sub_service_id: req.sub_service_id,
+      sub_service_name: req.subService?.name,
+      created_at: req.created_at,
+      updated_at: req.updated_at,
+      status: 'Active'  // You can modify this based on your requirements
     }));
   }
 }

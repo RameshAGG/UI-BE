@@ -12,6 +12,7 @@ import {
 import { Customer } from './customer.entity';
 import { ServiceMaster } from './service_master.entity';
 import { SubServiceMaster } from './sub_service_master.entity';
+import { Vendor } from './vendor.entity';
 
   @Entity('customer_requests')
   export class CustomerRequests {
@@ -51,6 +52,10 @@ import { SubServiceMaster } from './sub_service_master.entity';
     @ManyToOne(() => Customer, (customer) => customer.requests)
     @JoinColumn({ name: 'customer_id' })
     customer: Customer;
+
+    @ManyToOne(() => Vendor)
+    @JoinColumn({ name: 'vendor_id' })
+    vendor: Vendor;
 
     @ManyToOne(() => ServiceMaster)
     @JoinColumn({ name: 'service_id' })
