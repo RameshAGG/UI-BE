@@ -1,20 +1,24 @@
-import { Controller, Post, Request, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './local-auth.guard'; // You should already have this
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
-  @Post('login')
-  async login(@Request() req) {
-    return this.authService.login(req.user); // Now `req.user` is validated already
+  @Post('register')
+  register(
+    @Body() body: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    },
+  ) {
+    return this.authService.register(body);
   }
-}
 
-
-
-
-
-
+  @Post('login')
+  login(@Body() body: { email: string; password: string }) {
+    return this.authService.login(body);
+  }
+} 
