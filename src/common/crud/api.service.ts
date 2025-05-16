@@ -1,9 +1,11 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ObjectLiteral } from 'typeorm';
 import { ResponseUtil } from '../utils/response.util';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Injectable()
+@UseGuards(JwtAuthGuard)
 export class ApiService<T extends ObjectLiteral> {
   constructor(
     @InjectRepository(Repository)
