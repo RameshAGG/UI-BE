@@ -46,7 +46,7 @@ export class AuthService {
     return {
       success: true,
       message: 'User registered successfully',
-      data: userWithoutPassword,
+      data: userWithoutPassword as Omit<User, 'password'>,
       statusCode: HttpStatus.CREATED
     };
   }

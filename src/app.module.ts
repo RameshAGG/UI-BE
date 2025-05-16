@@ -6,6 +6,7 @@ import { CustomersModule } from './customers/customers.module';
 import { getDatabaseConfig } from './config/database.config';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AuthModule } from './auth/auth.module';
+import { BaseModule } from './common/base/base.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     CustomersModule,
     AuthModule,
+    BaseModule,
   ],
   providers: [
     {

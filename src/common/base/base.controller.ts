@@ -1,40 +1,39 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { BaseService } from './base.service';
+import { ApiResponse } from '../interfaces/api-response.interface';
+import { BaseEntity } from 'typeorm';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { ResponseUtil } from '../utils/response.util';
 
 @Controller()
 @UseGuards(JwtAuthGuard)
-export class BaseController {
-  constructor(private readonly service: any) {}
-
-  @Post()
-  async create(@Body() createDto: any) {
-    const data = await this.service.create(createDto);
-    return ResponseUtil.success(data, 'Created successfully', HttpStatus.CREATED);
-  }
+export abstract class BaseController<T extends BaseEntity> {
+  protected constructor(private readonly baseService: BaseService<T>) {}
 
   @Get()
-  async findAll() {
-    const data = await this.service.findAll();
-    return ResponseUtil.success(data, 'Retrieved successfully');
+  async findAll(): Promise<ApiResponse<T[]>> {
+    return this.baseService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.service.findOne(id);
-    return ResponseUtil.success(data, 'Retrieved successfully');
+  async findOne(@Param('id') id: string): Promise<ApiResponse<T>> {
+    return this.baseService.findOne(id);
+  }
+
+  @Post()
+  async create(@Body() data: Partial<T>): Promise<ApiResponse<T>> {
+    return this.baseService.create(data);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateDto: any) {
-    const data = await this.service.update(id, updateDto);
-    return ResponseUtil.success(data, 'Updated successfully');
+  async update(
+    @Param('id') id: string,
+    @Body() data: Partial<T>,
+  ): Promise<ApiResponse<T>> {
+    return this.baseService.update(id, data);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const data = await this.service.remove(id);
-    return ResponseUtil.success(data, 'Deleted successfully');
+  async remove(@Param('id') id: string): Promise<ApiResponse<T>> {
+    return this.baseService.remove(id);
   }
-} 
- 
+}

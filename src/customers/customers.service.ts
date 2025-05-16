@@ -9,7 +9,7 @@ import { ApiResponse } from '../common/interfaces/api-response.interface';
 export class CustomersService extends BaseService<Customer> {
   constructor(
     @InjectRepository(Customer)
-    private readonly customerRepository: Repository<Customer>,
+    protected readonly customerRepository: Repository<Customer>,
   ) {
     super(customerRepository);
   }
