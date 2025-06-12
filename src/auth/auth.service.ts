@@ -17,10 +17,11 @@ export class AuthService {
   async register(userData: {
     email: string;
     password: string;
-    firstName: string;
-    lastName: string;
+    name: string;
+    phone_num: string;
+    role:string;
   }): Promise<ApiResponse<Omit<User, 'password'>>> {
-    const { email, password, firstName, lastName } = userData;
+    const { email, password, name, phone_num,role } = userData;
 
     // Check if user already exists
     const existingUser = await this.usersRepository.findOne({ where: { email } });
@@ -35,8 +36,9 @@ export class AuthService {
     const user = this.usersRepository.create({
       email,
       password: hashedPassword,
-      firstName,
-      lastName,
+      name,
+      phone_num,
+      role,
     });
     const savedUser = await this.usersRepository.save(user);
 

@@ -8,8 +8,8 @@ export default new DataSource({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
   username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_DATABASE || 'casecare',
+  password: process.env.DB_PASSWORD || 'root',
+  database: process.env.DB_DATABASE || 'UIPR',
   entities: ['src/entities/*.entity{.ts,.js}'],
   migrations: ['src/migrations/*{.ts,.js}'],
   synchronize: false,
@@ -22,3 +22,5 @@ export default new DataSource({
 // npm run migration:generate src/migrations/InitMigration
 
 // npm run migration:run
+
+

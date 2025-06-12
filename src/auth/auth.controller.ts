@@ -10,8 +10,9 @@ export class AuthController {
     @Body() body: {
       email: string;
       password: string;
-      firstName: string;
-      lastName: string;
+      name: string;
+      phone_num: string;
+      role:string;
     },
   ) {
     return this.authService.register(body);
