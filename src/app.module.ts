@@ -15,6 +15,11 @@ import { SuggestionItemModule } from './suggestion-item/suggestion-item.module';
 import { SuggestionSupplierService } from './suggestion-supplier/suggestion-supplier.service';
 import { SuggestionSupplierModule } from './suggestion-supplier/suggestion-supplier.module';
 import { PurchaseRequestModule } from './purchase-request/purchase-request.module';
+import { ItemPriceUploadModule } from './item-price-upload/item-price-upload.module';
+import { SupplierUploadModule } from './supplier-upload/supplier-upload.module';
+import { ItemUploadModule } from './item_upload/item_upload.module';
+import { RfqModule } from './rfq/rfq.module';
+import { RfqDataModule } from './rfq-data/rfq-data.module';
 
 
 @Module({
@@ -37,12 +42,18 @@ import { PurchaseRequestModule } from './purchase-request/purchase-request.modul
     SuggestionSupplierModule,
     PurchaseRequestModule,
     // SupplierDetailsModule,
+    ItemPriceUploadModule,
+    SupplierUploadModule,
+    ItemUploadModule,
+    RfqModule,
+    RfqDataModule,
   ],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
     },
+    // ItemPriceUploadService,
     // SuggestionSupplierService,
   ],
 })

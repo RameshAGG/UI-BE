@@ -20,14 +20,15 @@ export class Item {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ length: 45 })
+    @Column({ name: 'item_name', length: 500 })
     item_name: string;
 
+    @Column({ type: 'varchar', length: 50 })
+    uom: string;    
 
-    
-    @Column()
-    uom: number;
-    
+    @Column({ type: 'int', default: 0 })
+    quantity: number;
+
     @Column()
     item_group_id: number;
 
@@ -42,18 +43,20 @@ export class Item {
     @JoinColumn({ name: 'item_subgroup_id' })
     itemSubGroup: ItemSubGroup;
 
-    @Column()
+    @Column({ type: 'int', nullable: true })
     pack_size: number;
 
-    @Column()
-    erp_code: number;
+    @Column({ type: 'varchar', length: 50 })
+    item_code: string;
 
-    @Column()
-    item_code: number;
+    @Column({ type: 'varchar', length: 50 })
+    erp_code: string;
+
 
     @ManyToOne(() => Supplier, { nullable: true })
     @JoinColumn({ name: 'supplier_id' })
     supplier: Supplier;
+
 
     @OneToOne(() => ItemDetails, (details) => details.item, { cascade: true })
     details: ItemDetails;

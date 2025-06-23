@@ -13,16 +13,16 @@ import {
     @PrimaryGeneratedColumn()
     id: number;
   
-    @Column({ length: 45 })
+    @Column({ length: 255})
     address: string;
   
-    @Column({ length: 45 })
+    @Column({ length: 100 })
     city: string;
   
-    @Column({ length: 45 })
+    @Column({ length: 100 })
     state: string;
   
-    @Column({ length: 45 })
+    @Column({ length: 100 })
     country: string;
   
     @Column()
@@ -35,7 +35,7 @@ import {
     gstNum: number;
     
   
-    @Column({ name: 'sup_code' })
+    @Column({ name: 'sup_code', length: 100 })
     supCode: string;
   
     @OneToOne(() => Supplier, (supplier) => supplier.details)

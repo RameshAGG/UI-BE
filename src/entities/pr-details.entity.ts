@@ -4,6 +4,7 @@ import {
   ManyToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
 import { Item } from './item.entity';
 import { Supplier } from './supplier.entity';
@@ -13,6 +14,7 @@ import { SuggestionSupplier } from './suggestion-supplier.entity';
 
 @Entity('pr_details')
 export class PrDetails {
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,8 +27,12 @@ export class PrDetails {
   @Column({ length: 45 })
   status: string;
 
+  @Column({ type: 'int', default: 0 })
+  quantity: number;
+
   @Column({ type: 'boolean' })
   item_type: boolean;
+
 
   @ManyToOne(() => Item, { eager: true })
   @JoinColumn({ name: 'item_id' })
@@ -50,4 +56,5 @@ export class PrDetails {
   suggestion_supplier?: SuggestionSupplier;
 
 }
+
 

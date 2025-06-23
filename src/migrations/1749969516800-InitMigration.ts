@@ -1,23 +1,23 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitMigration1749710398915 implements MigrationInterface {
-    name = 'InitMigration1749710398915'
+export class InitMigration1749969516800 implements MigrationInterface {
+    name = 'InitMigration1749969516800'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TABLE "supplier_details" ("id" SERIAL NOT NULL, "address" character varying(45) NOT NULL, "city" character varying(45) NOT NULL, "state" character varying(45) NOT NULL, "country" character varying(45) NOT NULL, "pin" integer NOT NULL, "pan_number" bigint NOT NULL, "gst_num" bigint NOT NULL, "sup_code" character varying NOT NULL, "supplier_id" integer, CONSTRAINT "REL_914fb2ddcb201feea0234f862e" UNIQUE ("supplier_id"), CONSTRAINT "PK_30c5e0127569a28e956ce463359" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "supplier" ("id" SERIAL NOT NULL, "name" character varying(45) NOT NULL, "email" character varying(45) NOT NULL, "mob_num" bigint NOT NULL, "tel_num" bigint NOT NULL, CONSTRAINT "PK_2bc0d2cab6276144d2ff98a2828" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "users" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, "phone_num" character varying NOT NULL, "role" character varying NOT NULL DEFAULT 'user', "status" character varying NOT NULL DEFAULT 'active', CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "item_details" ("id" SERIAL NOT NULL, "item_grade" integer NOT NULL, "item_colour" character varying(45) NOT NULL, "car_model" integer NOT NULL, "hsn" integer NOT NULL, "gst" double precision NOT NULL, "rate" double precision NOT NULL, "maintain_stock" integer NOT NULL, "stock_control" integer NOT NULL, "Qc_stock_control" integer NOT NULL, "wp_stock_control" integer NOT NULL, "qc_requried" integer NOT NULL, "active" integer NOT NULL, "items_id" integer, CONSTRAINT "REL_2ceea2307408fe6db26aaf385c" UNIQUE ("items_id"), CONSTRAINT "PK_5454cdc4a554db3678109d12533" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "supplier_details" ("id" SERIAL NOT NULL, "address" character varying(255) NOT NULL, "city" character varying(100) NOT NULL, "state" character varying(100) NOT NULL, "country" character varying(100) NOT NULL, "pin" integer NOT NULL, "pan_number" bigint NOT NULL, "gst_num" bigint NOT NULL, "sup_code" character varying(100) NOT NULL, "supplier_id" integer, CONSTRAINT "REL_914fb2ddcb201feea0234f862e" UNIQUE ("supplier_id"), CONSTRAINT "PK_30c5e0127569a28e956ce463359" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "supplier" ("id" SERIAL NOT NULL, "name" character varying(150) NOT NULL, "email" character varying(150), "mob_num" bigint NOT NULL, "tel_num" bigint NOT NULL, CONSTRAINT "PK_2bc0d2cab6276144d2ff98a2828" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "item_details" ("id" SERIAL NOT NULL, "item_grade" integer NOT NULL, "item_colour" character varying(45) NOT NULL, "car_model" character varying(50), "hsn" double precision, "gst" double precision, "rate" double precision NOT NULL DEFAULT '0', "maintain_stock" integer NOT NULL DEFAULT '0', "stock_control" integer NOT NULL DEFAULT '0', "Qc_stock_control" integer NOT NULL DEFAULT '0', "wp_stock_control" integer NOT NULL DEFAULT '0', "qc_requried" integer NOT NULL DEFAULT '0', "active" integer NOT NULL DEFAULT '0', "items_id" integer, CONSTRAINT "REL_2ceea2307408fe6db26aaf385c" UNIQUE ("items_id"), CONSTRAINT "PK_5454cdc4a554db3678109d12533" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "item_group" ("id" SERIAL NOT NULL, "item_group_name" character varying(45) NOT NULL, CONSTRAINT "PK_6b0100c5cb7c67d99ae46197727" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "item_sub_group" ("id" SERIAL NOT NULL, "item_subgroup_name" character varying(45) NOT NULL, "item_group_id" integer, CONSTRAINT "PK_ee78c2d0a0093d38a21c58ea430" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "items" ("id" SERIAL NOT NULL, "item_name" character varying(45) NOT NULL, "uom" integer NOT NULL, "item_group_id" integer NOT NULL, "item_subgroup_id" integer NOT NULL, "pack_size" integer NOT NULL, "erp_code" integer NOT NULL, "item_code" integer NOT NULL, "supplier_id" integer, CONSTRAINT "PK_ba5885359424c15ca6b9e79bcf6" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "items" ("id" SERIAL NOT NULL, "item_name" character varying(500) NOT NULL, "uom" character varying(50) NOT NULL, "item_group_id" integer NOT NULL, "item_subgroup_id" integer NOT NULL, "pack_size" integer, "item_code" character varying(50) NOT NULL, "erp_code" character varying(50) NOT NULL, "supplier_id" integer, CONSTRAINT "PK_ba5885359424c15ca6b9e79bcf6" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "supplier_history" ("id" SERIAL NOT NULL, "rate" integer NOT NULL, "created_at" bigint NOT NULL, "created_by" character varying(45) NOT NULL, "valid_date" date NOT NULL, "supplier_id" integer NOT NULL, "items_id" integer NOT NULL, CONSTRAINT "PK_e99a304491bc41175120b95e8e3" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "suggestion_item_master" ("id" SERIAL NOT NULL, "item_name" character varying(45) NOT NULL, "category" character varying(45) NOT NULL, "sub_category" character varying(45) NOT NULL, CONSTRAINT "PK_a511c7393a462b0f661930890cc" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "SuggestionSupplier" ("id" SERIAL NOT NULL, "name" character varying(45) NOT NULL, "email" character varying(45) NOT NULL, "mob_num" bigint NOT NULL, "tel_num" bigint NOT NULL, CONSTRAINT "PK_b6491908d8ab118bfeed4815972" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "suggestion_item_master" ("id" SERIAL NOT NULL, "item_name" character varying(45) NOT NULL, "category" character varying(45) NOT NULL, "sub_category" character varying(45) NOT NULL, CONSTRAINT "PK_a511c7393a462b0f661930890cc" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "suggestion_price_master" ("id" SERIAL NOT NULL, "company" character varying(45) NOT NULL, "unit" integer NOT NULL, "effective_date" date NOT NULL, "rate" integer NOT NULL, "default_user" character varying(45) NOT NULL, "supplier_id" integer, "items_id" integer, CONSTRAINT "PK_267a5c41279acf5fc2f33008167" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "purchase_requests" ("id" SERIAL NOT NULL, CONSTRAINT "PK_f3c5a8ff7bd4338f4c860925c8f" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "pr_details" ("id" SERIAL NOT NULL, "department" character varying(45) NOT NULL, "date_requested" date NOT NULL, "status" character varying(45) NOT NULL, "item_type" boolean NOT NULL, "item_id" integer, "supplier_id" integer, "purchase_request_id" integer, "suggestion_item_id" integer, "suggestion_supplier_id" integer, CONSTRAINT "PK_18d7c11e14c424a10ebd7adf6af" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "items_price_master" ("id" SERIAL NOT NULL, "company" character varying(45) NOT NULL, "unit" integer NOT NULL, "effective_date" date NOT NULL, "rate" integer NOT NULL, "default_user" character varying(45) NOT NULL, "supplier_id" integer, "items_id" integer, CONSTRAINT "PK_bf8417460a7050ab15454a23954" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "items_price_master" ("id" SERIAL NOT NULL, "company" character varying(45) NOT NULL, "unit" character varying(50) NOT NULL, "effective_date" date NOT NULL, "rate" numeric(10,2) NOT NULL, "default_user" character varying(45) NOT NULL, "supplier_id" integer, "items_id" integer, CONSTRAINT "PK_bf8417460a7050ab15454a23954" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "customers" ("id" SERIAL NOT NULL, "firstName" character varying NOT NULL, "lastName" character varying NOT NULL, "email" character varying NOT NULL, "phone" character varying NOT NULL, "address" character varying, CONSTRAINT "UQ_8536b8b85c06969f84f0c098b03" UNIQUE ("email"), CONSTRAINT "PK_133ec679a801fab5e070f73d3ea" PRIMARY KEY ("id"))`);
         await queryRunner.query(`ALTER TABLE "supplier_details" ADD CONSTRAINT "FK_914fb2ddcb201feea0234f862e7" FOREIGN KEY ("supplier_id") REFERENCES "supplier"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "item_details" ADD CONSTRAINT "FK_2ceea2307408fe6db26aaf385c0" FOREIGN KEY ("items_id") REFERENCES "items"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
@@ -61,16 +61,16 @@ export class InitMigration1749710398915 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "pr_details"`);
         await queryRunner.query(`DROP TABLE "purchase_requests"`);
         await queryRunner.query(`DROP TABLE "suggestion_price_master"`);
-        await queryRunner.query(`DROP TABLE "SuggestionSupplier"`);
         await queryRunner.query(`DROP TABLE "suggestion_item_master"`);
+        await queryRunner.query(`DROP TABLE "SuggestionSupplier"`);
         await queryRunner.query(`DROP TABLE "supplier_history"`);
         await queryRunner.query(`DROP TABLE "items"`);
         await queryRunner.query(`DROP TABLE "item_sub_group"`);
         await queryRunner.query(`DROP TABLE "item_group"`);
         await queryRunner.query(`DROP TABLE "item_details"`);
-        await queryRunner.query(`DROP TABLE "users"`);
         await queryRunner.query(`DROP TABLE "supplier"`);
         await queryRunner.query(`DROP TABLE "supplier_details"`);
+        await queryRunner.query(`DROP TABLE "users"`);
     }
 
 }

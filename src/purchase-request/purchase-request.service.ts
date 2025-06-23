@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BaseService } from 'src/common/base/base.service';
+// import { BaseService } from 'src/common/base/base.service';
 import { ApiService } from 'src/common/crud/api.service';
-import { ApiResponse } from 'src/common/interfaces/api-response.interface';
+import { ApiResponse, ApiResponses } from 'src/common/interfaces/api-response.interface';
 import { Item } from 'src/entities/item.entity';
 import { PurchaseRequest } from '../entities/purchase-requests.entity';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, ILike, FindManyOptions } from 'typeorm';
 import { PrDetails } from '../entities/pr-details.entity';
 import { Supplier } from '../entities/supplier.entity';
 import { SuggestionItem } from '../entities/suggestion.item.entity';
 import { SuggestionSupplier } from 'src/entities/suggestion-supplier.entity';
+import { FindOptionsWhere } from 'typeorm';
 
 interface CreatePurchaseRequestData {
   department: string;
@@ -21,6 +22,7 @@ interface CreatePurchaseRequestData {
     item_name?: string;
     category?: string;
     subcategory?: string;
+    quantity?: number;
     item_type: boolean;
     uom?: number;
     item_group_id?: number;
@@ -52,316 +54,565 @@ interface CreatePurchaseRequestData {
 
 @Injectable()
 // export class PurchaseRequestService  {
-    export class PurchaseRequestService extends ApiService<PrDetails> {
+export class PurchaseRequestService extends ApiService<PrDetails> {
 
-    constructor(
-        @InjectRepository(PurchaseRequest)
-        protected readonly RequestRepository: Repository<PurchaseRequest>,
-        @InjectRepository(Item)
-        protected readonly ItemsRepository: Repository<Item>,
-        @InjectRepository(PrDetails)
-        protected readonly prDetailsRepository: Repository<PrDetails>,
-        @InjectRepository(Supplier)
-        private supplierRepository: Repository<Supplier>,
-        @InjectRepository(SuggestionItem)
-        private suggestionItemRepository: Repository<SuggestionItem>,
-        @InjectRepository(SuggestionSupplier)
-        private suggestionSupplierRepository: Repository<SuggestionSupplier>,
-        private dataSource: DataSource,
-      ) {
-        super(prDetailsRepository);
-      }
-
-    
-      async create(data: Partial<PurchaseRequest>): Promise<ApiResponse<PurchaseRequest>> {
-        return super.create(data);
-      }
-    
-      async findAll(): Promise<ApiResponse<PurchaseRequest[]>> {
-        return super.findAll();
-      }
-    
-      async findOne(id: string): Promise<ApiResponse<PurchaseRequest>> {
-        return super.findOne(id);
-      }
-    
-      async update(id: string, data: Partial<PurchaseRequest>): Promise<ApiResponse<PurchaseRequest>> {
-        return super.update(id, data);
-      }
-    
-      async remove(id: string): Promise<ApiResponse<PurchaseRequest>> {
-        return super.delete(id);
-      }
+  constructor(
+    @InjectRepository(PurchaseRequest)
+    protected readonly RequestRepository: Repository<PurchaseRequest>,
+    @InjectRepository(Item)
+    protected readonly ItemsRepository: Repository<Item>,
+    @InjectRepository(PrDetails)
+    protected readonly prDetailsRepository: Repository<PrDetails>,
+    @InjectRepository(Supplier)
+    private supplierRepository: Repository<Supplier>,
+    @InjectRepository(SuggestionItem)
+    private suggestionItemRepository: Repository<SuggestionItem>,
+    @InjectRepository(SuggestionSupplier)
+    private suggestionSupplierRepository: Repository<SuggestionSupplier>,
+    private dataSource: DataSource,
+  ) {
+    super(prDetailsRepository);
+  }
 
 
-      async createPurchaseRequest(data: CreatePurchaseRequestData) {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-      
-        try {
-          // Create base purchase request
-          const purchaseRequest = new PurchaseRequest();
-          const savedPurchaseRequest = await queryRunner.manager.save(purchaseRequest);
-      
-          const prDetailsPromises: Promise<PrDetails>[] = [];
-      
-          for (const item of data.items) {
-            let itemEntity: Item | null = null;
-            let suggestionItem: SuggestionItem | null = null;
-      
-            if (item.item_id) {
-              itemEntity = await this.ItemsRepository.findOne({ where: { id: item.item_id } });
-              if (!itemEntity) throw new Error(`Item with ID ${item.item_id} not found`);
-            } else {
-              // Check existing by name
-              itemEntity = await this.ItemsRepository.findOne({ where: { item_name: item.item_name } });
+  async create(data: Partial<PurchaseRequest>): Promise<ApiResponse<PurchaseRequest>> {
+    return super.create(data);
+  }
+
+  // async findAll(): Promise<ApiResponse<PurchaseRequest[]>> {
+  //   return super.findAll();
+  // }
+
+
+  // async findAll(): Promise<ApiResponse<any[]>> {
+  //   try {
+  //     // Get all PR details with relations
+  //     const prDetails = await this.prDetailsRepository.find({
+  //       relations: [
+  //         'purchase_request',
+  //         'item',
+  //         'supplier',
+  //         'suggestion_item',
+  //         'suggestion_supplier'
+  //       ],
+  //       order: {
+  //         purchase_request: { id: 'ASC' }
+  //       }
+  //     });
+
+  //     // Group by purchase request
+  //     const grouped = prDetails.reduce((acc, detail) => {
+  //       const prId = detail.purchase_request.id;
+  //       if (!acc[prId]) {
+  //         acc[prId] = {
+  //           id: detail.id,
+  //           department: detail.department,
+  //           date_requested: detail.date_requested,
+  //           status: detail.status,
+  //           item_type: detail.item_type,
+  //           purchase_request_id: prId,
+  //           items: [],
+  //           suppliers: [],
+  //           item_ids: new Set(),
+  //           supplier_ids: new Set()
+  //         };
+  //       }
+
+  //       // Add item information
+  //       if (detail.item && !acc[prId].item_ids.has(detail.item.id)) {
+  //         acc[prId].items.push({
+  //           id: detail.item.id,
+  //           name: detail.item.item_name,
+  //           type: 'existing',
+  //           // category: detail.item.category,
+  //           // subcategory: detail.item.subcategory
+  //         });
+  //         acc[prId].item_ids.add(detail.item.id);
+  //       } else if (detail.suggestion_item && !acc[prId].item_ids.has(detail.suggestion_item.id)) {
+  //         acc[prId].items.push({
+  //           id: detail.suggestion_item.id,
+  //           name: detail.suggestion_item.item_name,
+  //           type: 'suggested',
+  //           category: detail.suggestion_item.category,
+  //           subcategory: detail.suggestion_item.sub_category
+  //         });
+  //         acc[prId].item_ids.add(detail.suggestion_item.id);
+  //       }
+
+  //       // Add supplier information
+  //       if (detail.supplier && !acc[prId].supplier_ids.has(detail.supplier.id)) {
+  //         acc[prId].suppliers.push({
+  //           id: detail.supplier.id,
+  //           name: detail.supplier.name,
+  //           type: 'existing',
+  //           email: detail.supplier.email,
+  //           mob_num: detail.supplier.mob_num
+  //         });
+  //         acc[prId].supplier_ids.add(detail.supplier.id);
+  //       } else if (detail.suggestion_supplier && !acc[prId].supplier_ids.has(detail.suggestion_supplier.id)) {
+  //         acc[prId].suppliers.push({
+  //           id: detail.suggestion_supplier.id,
+  //           name: detail.suggestion_supplier.name,
+  //           type: 'suggested',
+  //           email: detail.suggestion_supplier.email,
+  //           mob_num: detail.suggestion_supplier.mob_num
+  //         });
+  //         acc[prId].supplier_ids.add(detail.suggestion_supplier.id);
+  //       }
+
+  //       return acc;
+  //     }, {});
+
+  //     // Transform the grouped data
+  //     const result = Object.values(grouped).map((group: any) => ({
+  //       id: group.id,
+  //       department: group.department,
+  //       date_requested: group.date_requested,
+  //       status: group.status,
+  //       item_type: group.item_type,
+  //       purchase_request_id: group.purchase_request_id,
+
+  //       // items: group.items,
+  //       // suppliers: group.suppliers,
+  //       total_items: group.items.length,
+  //       total_suppliers: group.suppliers.length,
+  //     }));
+
+  //     return {
+  //       success: true,
+  //       message: 'Success',
+  //       data: result,
+  //       statusCode: 200
+  //     };
+  //   } catch (error) {
+  //     return {
+  //       success: false,
+  //       message: error.message,
+  //       data: null,
+  //       statusCode: 500
+  //     };
+  //   }
+  // }
+
+
+  async findAll(query?: {
+    searchInput?: string;
+    offset?: number;
+    limit?: number;
+    sortField?: string;
+    sortOrder?: number;
+  }): Promise<ApiResponse<any[]>> {
+    try {
+      // Build the base query options for PurchaseRequest
+      const options: FindManyOptions<PurchaseRequest> = {
+        relations: {
+          pr_details: {
+            item: true,
+            supplier: true,
+            suggestion_item: true,
+            suggestion_supplier: true
+          }
+        },
+        order: {
+          id: 'ASC'
+        },
+        skip: query?.offset || 0,
+        take: query?.limit || 10
+      };
+
+      // Apply search if provided
+      if (query?.searchInput) {
+        options.where = [
+          {
+            pr_details: {
+              department: ILike(`%${query.searchInput}%`)
             }
-      
-            if (!itemEntity) {
-              // Create or get suggestion item
-              suggestionItem = await this.suggestionItemRepository.findOne({
-                where: { item_name: item.item_name },
-              });
-      
-              if (!suggestionItem) {
-                suggestionItem = this.suggestionItemRepository.create({
-                  item_name: item.item_name,
-                  category: item.category,
-                  sub_category: item.subcategory,
-                });
-                suggestionItem = await queryRunner.manager.save(suggestionItem);
-              }
+          },
+          {
+            pr_details: {
+              status: ILike(`%${query.searchInput}%`)
             }
-      
-            for (const supplierData of item.supplier) {
-              let supplierEntity: Supplier | null = null;
-              let suggestionSupplier: SuggestionSupplier | null = null;
-      
-              if (supplierData.supplier_id) {
-                supplierEntity = await this.supplierRepository.findOne({ where: { id: supplierData.supplier_id } });
-                if (!supplierEntity) throw new Error(`Supplier with ID ${supplierData.supplier_id} not found`);
-              } else {
-                // Check existing by email or name
-                supplierEntity = await this.supplierRepository.findOne({
-                  where: { email: supplierData.email },
-                });
-              }
-      
-              if (!supplierEntity) {
-                // Create or get suggestion supplier
-                suggestionSupplier = await this.suggestionSupplierRepository.findOne({
-                  where: { email: supplierData.email },
-                });
-      
-                if (!suggestionSupplier) {
-                  suggestionSupplier = this.suggestionSupplierRepository.create({
-                    name: supplierData.name,
-                    email: supplierData.email,
-                    mob_num: supplierData.mob_num,
-                    tel_num: supplierData.tel_num,
-                  });
-                  suggestionSupplier = await queryRunner.manager.save(suggestionSupplier);
-                }
-              }
-      
-              const prDetail = new PrDetails();
-              prDetail.department = data.department;
-              prDetail.date_requested = data.date_requested;
-              prDetail.status = data.status;
-              prDetail.item_type = item.item_type;
-              prDetail.purchase_request = savedPurchaseRequest;
-      
-              if (itemEntity) prDetail.item = itemEntity;
-              else if (suggestionItem) prDetail.suggestion_item = suggestionItem;
-      
-              if (supplierEntity) prDetail.supplier = supplierEntity;
-              else if (suggestionSupplier) prDetail.suggestion_supplier = suggestionSupplier;
-      
-              prDetailsPromises.push(queryRunner.manager.save(prDetail));
+          },
+          {
+            pr_details: {
+              item: { item_name: ILike(`%${query.searchInput}%`) }
+            }
+          },
+          {
+            pr_details: {
+              suggestion_item: { item_name: ILike(`%${query.searchInput}%`) }
+            }
+          },
+          {
+            pr_details: {
+              supplier: { name: ILike(`%${query.searchInput}%`) }
+            }
+          },
+          {
+            pr_details: {
+              suggestion_supplier: { name: ILike(`%${query.searchInput}%`) }
             }
           }
-      
-          await Promise.all(prDetailsPromises);
-          await queryRunner.commitTransaction();
-      
-          return {
-            success: true,
-            data: savedPurchaseRequest,
-            message: 'Purchase request created successfully',
-            statusCode: 201,
+        ] as FindOptionsWhere<PurchaseRequest>[];
+      }
+
+      // Apply sorting if provided
+      if (query?.sortField) {
+        const order: 'ASC' | 'DESC' = query.sortOrder === -1 ? 'DESC' : 'ASC';
+
+        if (query.sortField.includes('pr_details.')) {
+          const field = query.sortField.replace('pr_details.', '');
+          options.order = {
+            pr_details: {
+              [field]: order
+            }
           };
-        } catch (err) {
-          await queryRunner.rollbackTransaction();
-          throw err;
-        } finally {
-          await queryRunner.release();
+        } else {
+          options.order = {
+            [query.sortField]: order
+          };
         }
       }
-      
+
+      // Get all PurchaseRequests with relations
+      const [purchaseRequests, totalCount] = await this.RequestRepository.findAndCount(options);
+
+      // Process each purchase request to group the details
+      const result = purchaseRequests.map(purchaseRequest => {
+        if (!purchaseRequest.pr_details || purchaseRequest.pr_details.length === 0) {
+          return {
+            id: purchaseRequest.id,
+            department: null,
+            date_requested: null,
+            status: null,
+            item_type: null,
+            purchase_request_id: purchaseRequest.id,
+            total_items: 0,
+            total_suppliers: 0,
+            _pagination: {
+              total: totalCount,
+              offset: query?.offset || 0,
+              limit: query?.limit || 10
+            }
+          };
+        }
+
+        const firstDetail = purchaseRequest.pr_details[0];
+        const items = new Set<number>();
+        const suppliers = new Set<number>();
+
+        purchaseRequest.pr_details.forEach(detail => {
+          if (detail.item) items.add(detail.item.id);
+          if (detail.suggestion_item) items.add(detail.suggestion_item.id);
+          if (detail.supplier) suppliers.add(detail.supplier.id);
+          if (detail.suggestion_supplier) suppliers.add(detail.suggestion_supplier.id);
+        });
+
+        return {
+          id: purchaseRequest.id,
+          department: firstDetail.department,
+          date_requested: firstDetail.date_requested,
+          status: firstDetail.status,
+          item_type: firstDetail.item_type,
+          purchase_request_id: purchaseRequest.id,
+          total_items: items.size,
+          total_suppliers: suppliers.size,
+          _pagination: {
+            total: totalCount,
+            offset: query?.offset || 0,
+            limit: query?.limit || 10
+          }
+        };
+      });
+
+      return {
+        success: true,
+        message: 'Success',
+        data: result,
+        statusCode: 200
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+        data: null,
+        statusCode: 500
+      };
+    }
+  }
+
+  
+  private createEmptyResponse(
+    purchaseRequest: PurchaseRequest,
+    totalCount: number,
+    offset: number,
+    limit: number
+  ) {
+    return {
+      id: purchaseRequest.id,
+      department: null,
+      date_requested: null,
+      status: null,
+      item_type: null,
+      purchase_request_id: purchaseRequest.id,
+      total_items: 0,
+      total_suppliers: 0,
+      _pagination: {
+        total: totalCount,
+        offset,
+        limit,
+        hasMore: offset + limit < totalCount
+      }
+    };
+  }
+  
+  private countUniqueItemsAndSuppliers(details: PrDetails[]): {
+    itemsCount: number;
+    suppliersCount: number;
+  } {
+    const items = new Set<number>();
+    const suppliers = new Set<number>();
+  
+    details.forEach(detail => {
+      if (detail.item) items.add(detail.item.id);
+      if (detail.suggestion_item) items.add(detail.suggestion_item.id);
+      if (detail.supplier) suppliers.add(detail.supplier.id);
+      if (detail.suggestion_supplier) suppliers.add(detail.suggestion_supplier.id);
+    });
+  
+    return {
+      itemsCount: items.size,
+      suppliersCount: suppliers.size
+    };
+  }
+  
+
+  async findOne(id: string): Promise<ApiResponse<any>> {
+    try {
+      // Get PR details with relations for the specific purchase request
+      const prDetails = await this.prDetailsRepository.find({
+        where: { purchase_request: { id: parseInt(id) } },
+        relations: [
+          'purchase_request',
+          'item',
+          'supplier',
+          'suggestion_item',
+          'suggestion_supplier'
+        ],
+        order: { id: 'ASC' }
+      });
+
+      if (!prDetails || prDetails.length === 0) {
+        return {
+          success: false,
+          message: 'Purchase request not found',
+          data: null,
+          statusCode: 404
+        };
+      }
+
+      // Initialize collections
+      const items = new Map<number, any>();
+      const suppliers = new Map<number, any>();
+      const prCommonData = {
+        id: prDetails[0].id,
+        department: prDetails[0].department,
+        date_requested: prDetails[0].date_requested,
+        status: prDetails[0].status,
+        item_type: prDetails[0].item_type,
+        purchase_request_id: prDetails[0].purchase_request.id
+      };
+
+      // Process each detail record
+      for (const detail of prDetails) {
+        // Handle items
+        if (detail.item && !items.has(detail.item.id)) {
+          items.set(detail.item.id, {
+            id: detail.item.id,
+            name: detail.item.item_name,
+            type: 'existing',
+            quantity: detail.quantity, // Add this line
+            // category: detail.item.category,
+            // subcategory: detail.item.subcategory,
+            uom: detail.item.uom,
+            pack_size: detail.item.pack_size
+          });
+        } else if (detail.suggestion_item && !items.has(detail.suggestion_item.id)) {
+          items.set(detail.suggestion_item.id, {
+            id: detail.suggestion_item.id,
+            name: detail.suggestion_item.item_name,
+            type: 'suggested',
+            quantity: detail.quantity, // Add this line
+            category: detail.suggestion_item.category,
+            subcategory: detail.suggestion_item.sub_category,
+            uom: null,
+            pack_size: null
+          });
+        }
+
+        // Handle suppliers
+        if (detail.supplier && !suppliers.has(detail.supplier.id)) {
+          suppliers.set(detail.supplier.id, {
+            id: detail.supplier.id,
+            name: detail.supplier.name,
+            type: 'existing',
+            email: detail.supplier.email,
+            mob_num: detail.supplier.mob_num,
+            tel_num: detail.supplier.tel_num
+          });
+        } else if (detail.suggestion_supplier && !suppliers.has(detail.suggestion_supplier.id)) {
+          suppliers.set(detail.suggestion_supplier.id, {
+            id: detail.suggestion_supplier.id,
+            name: detail.suggestion_supplier.name,
+            type: 'suggested',
+            email: detail.suggestion_supplier.email,
+            mob_num: detail.suggestion_supplier.mob_num,
+            tel_num: detail.suggestion_supplier.tel_num
+          });
+        }
+      }
+
+      // Build the result object
+      const result = {
+        ...prCommonData,
+        total_items: items.size,
+        total_suppliers: suppliers.size,
+        items: Array.from(items.values()),
+        suppliers: Array.from(suppliers.values()),
+        // Include additional PR metadata if needed
+        // created_at: prDetails[0].purchase_request.created_at,
+        // updated_at: prDetails[0].purchase_request.updated_at
+      };
+
+      return {
+        success: true,
+        message: 'Success',
+        data: result,
+        statusCode: 200
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+        data: null,
+        statusCode: 500
+      };
+    }
+  }
+
+  async update(id: string, data: Partial<PurchaseRequest>): Promise<ApiResponse<PurchaseRequest>> {
+    return super.update(id, data);
+  }
+
+  async remove(id: string): Promise<ApiResponse<PurchaseRequest>> {
+    return super.delete(id);
+  }
 
 
+  async createPurchaseRequest(data: CreatePurchaseRequestData) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
+    try {
+      // Create base purchase request
+      const purchaseRequest = new PurchaseRequest();
+      const savedPurchaseRequest = await queryRunner.manager.save(purchaseRequest);
 
+      const prDetailsPromises: Promise<PrDetails>[] = [];
 
+      for (const item of data.items) {
+        let itemEntity: Item | null = null;
+        let suggestionItem: SuggestionItem | null = null;
 
+        if (item.item_id) {
+          itemEntity = await this.ItemsRepository.findOne({ where: { id: item.item_id } });
+          if (!itemEntity) throw new Error(`Item with ID ${item.item_id} not found`);
+        } else {
+          // Check existing by name
+          itemEntity = await this.ItemsRepository.findOne({ where: { item_name: item.item_name } });
+        }
 
+        if (!itemEntity) {
+          // Create or get suggestion item
+          suggestionItem = await this.suggestionItemRepository.findOne({
+            where: { item_name: item.item_name },
+          });
 
+          if (!suggestionItem) {
+            suggestionItem = this.suggestionItemRepository.create({
+              item_name: item.item_name,
+              category: item.category,
+              sub_category: item.subcategory,
+            });
+            suggestionItem = await queryRunner.manager.save(suggestionItem);
+          }
+        }
 
+        for (const supplierData of item.supplier) {
+          let supplierEntity: Supplier | null = null;
+          let suggestionSupplier: SuggestionSupplier | null = null;
 
+          if (supplierData.supplier_id) {
+            supplierEntity = await this.supplierRepository.findOne({ where: { id: supplierData.supplier_id } });
+            if (!supplierEntity) throw new Error(`Supplier with ID ${supplierData.supplier_id} not found`);
+          } else {
+            // Check existing by email or name
+            supplierEntity = await this.supplierRepository.findOne({
+              where: { email: supplierData.email },
+            });
+          }
 
+          if (!supplierEntity) {
+            // Create or get suggestion supplier
+            suggestionSupplier = await this.suggestionSupplierRepository.findOne({
+              where: { email: supplierData.email },
+            });
 
+            if (!suggestionSupplier) {
+              suggestionSupplier = this.suggestionSupplierRepository.create({
+                name: supplierData.name,
+                email: supplierData.email,
+                mob_num: supplierData.mob_num,
+                tel_num: supplierData.tel_num,
+              });
+              suggestionSupplier = await queryRunner.manager.save(suggestionSupplier);
+            }
+          }
 
+          const prDetail = new PrDetails();
+          prDetail.department = data.department;
+          prDetail.date_requested = data.date_requested;
+          prDetail.status = data.status;
+          prDetail.item_type = item.item_type;
+          prDetail.purchase_request = savedPurchaseRequest;
+          prDetail.quantity = item.quantity || 1; // Add this line to set quantity
 
+          if (itemEntity) prDetail.item = itemEntity;
+          else if (suggestionItem) prDetail.suggestion_item = suggestionItem;
 
+          if (supplierEntity) prDetail.supplier = supplierEntity;
+          else if (suggestionSupplier) prDetail.suggestion_supplier = suggestionSupplier;
 
+          prDetailsPromises.push(queryRunner.manager.save(prDetail));
+        }
+      }
 
+      await Promise.all(prDetailsPromises);
+      await queryRunner.commitTransaction();
 
+      return {
+        success: true,
+        data: savedPurchaseRequest,
+        message: 'Purchase request created successfully',
+        statusCode: 201,
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-      // async createPurchaseRequest(data: CreatePurchaseRequestData) {
-      //   const queryRunner = this.dataSource.createQueryRunner();
-      //   await queryRunner.connect();
-      //   await queryRunner.startTransaction();
-
-      //   try {
-      //     // Create purchase request
-      //     const purchaseRequest = new PurchaseRequest();
-      //     const savedPurchaseRequest = await queryRunner.manager.save(purchaseRequest);
-
-      //     // Create PR details for each item and supplier combination
-      //     const prDetailsPromises: Promise<PrDetails>[] = [];
-
-      //     // Handle items
-      //     if (data.items) {
-      //       for (const item of data.items) {
-      //         let itemEntity: Item;
-
-      //         // Handle new item
-      //         if (item.is_new_item) {
-      //           if (!item.item_name || !item.category || !item.subcategory) {
-      //             throw new Error('New item requires name, category, and subcategory');
-      //           }
-
-      //           // Create new item with default values for required fields
-      //           const newItem = new Item();
-      //           newItem.item_name = item.item_name;
-      //           newItem.uom = item.uom || 1; // Default UOM
-      //           newItem.item_group_id = item.item_group_id || 1; // Default group
-      //           newItem.item_subgroup_id = item.item_subgroup_id || 1; // Default subgroup
-      //           newItem.pack_size = item.pack_size || 1; // Default pack size
-      //           newItem.erp_code = item.erp_code || 0; // Default ERP code
-      //           newItem.item_code = item.item_code || 0; // Default item code
-                
-      //           itemEntity = await queryRunner.manager.save(newItem);
-      //         } else {
-      //           // Handle existing item
-      //           if (!item.item_id) {
-      //             throw new Error('Item ID is required for existing items');
-      //           }
-      //           const foundItem = await this.ItemsRepository.findOne({ where: { id: item.item_id } });
-      //           if (!foundItem) {
-      //             throw new Error(`Item with ID ${item.item_id} not found`);
-      //           }
-      //           itemEntity = foundItem;
-      //         }
-
-      //         // Handle suppliers for this item
-      //         for (const supplierData of item.supplier) {
-      //           let supplierEntity: Supplier;
-
-      //           // Handle new supplier
-      //           if (supplierData.is_new_supplier) {
-      //             if (!supplierData.name || !supplierData.email || !supplierData.mob_num || !supplierData.tel_num) {
-      //               throw new Error('New supplier requires name, email, mobile number, and telephone number');
-      //             }
-
-      //             // Create new suggestion supplier
-      //             const newSuggestionSupplier = new SuggestionSupplier();
-      //             newSuggestionSupplier.name = supplierData.name;
-      //             newSuggestionSupplier.email = supplierData.email;
-      //             newSuggestionSupplier.mob_num = supplierData.mob_num;
-      //             newSuggestionSupplier.tel_num = supplierData.tel_num;
-                  
-      //             // Save to suggestion supplier table
-      //             const savedSuggestionSupplier = await queryRunner.manager.save(newSuggestionSupplier);
-                  
-      //             // Create new supplier from suggestion
-      //             const newSupplier = new Supplier();
-      //             newSupplier.name = savedSuggestionSupplier.name;
-      //             newSupplier.email = savedSuggestionSupplier.email;
-      //             newSupplier.mob_num = savedSuggestionSupplier.mob_num;
-      //             newSupplier.tel_num = savedSuggestionSupplier.tel_num;
-      //             supplierEntity = await queryRunner.manager.save(newSupplier);
-      //           } else {
-      //             // Handle existing supplier
-      //             if (!supplierData.supplier_id) {
-      //               throw new Error('Supplier ID is required for existing suppliers');
-      //             }
-      //             const foundSupplier = await this.supplierRepository.findOne({ 
-      //               where: { id: supplierData.supplier_id } 
-      //             });
-      //             if (!foundSupplier) {
-      //               throw new Error(`Supplier with ID ${supplierData.supplier_id} not found`);
-      //             }
-      //             supplierEntity = foundSupplier;
-      //           }
-
-      //           // Create PR detail
-      //           const prDetail = new PrDetails();
-      //           prDetail.department = data.department;
-      //           prDetail.date_requested = data.date_requested;
-      //           prDetail.status = data.status;
-      //           prDetail.item_type = item.item_type;
-      //           prDetail.item = itemEntity;
-      //           prDetail.supplier = supplierEntity;
-      //           prDetail.purchase_request = savedPurchaseRequest;
-                
-      //           prDetailsPromises.push(queryRunner.manager.save(prDetail));
-      //         }
-      //       }
-      //     }
-
-      //     // Handle suggestion items - insert into suggestion_item_master table
-      //     if (data.suggestion_items) {
-      //       const suggestionItemPromises: Promise<SuggestionItem>[] = [];
-            
-      //       for (const suggestionItemData of data.suggestion_items) {
-      //         const suggestionItem = new SuggestionItem();
-      //         suggestionItem.item_name = suggestionItemData.item_name;
-      //         suggestionItem.category = suggestionItemData.category;
-      //         suggestionItem.sub_category = suggestionItemData.sub_category;
-              
-      //         suggestionItemPromises.push(queryRunner.manager.save(suggestionItem));
-      //       }
-
-      //       await Promise.all(suggestionItemPromises);
-      //     }
-
-      //     await Promise.all(prDetailsPromises);
-      //     await queryRunner.commitTransaction();
-
-      //     return {
-      //       success: true,
-      //       data: savedPurchaseRequest,
-      //       message: 'Purchase request created successfully',
-      //       statusCode: 201
-      //     };
-      //   } catch (err) {
-      //     await queryRunner.rollbackTransaction();
-      //     throw err;
-      //   } finally {
-      //     await queryRunner.release();
-      //   }
-      // }
 }

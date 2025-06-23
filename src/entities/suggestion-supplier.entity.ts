@@ -29,6 +29,8 @@ import {
     @Column({ name: 'tel_num', type: 'bigint' })
     tel_num: number;
     
+    @Column({ length: 50, nullable: true })
+    code: string;
   
     @OneToOne(() => SupplierDetails, (details) => details.supplier, {
       cascade: true,

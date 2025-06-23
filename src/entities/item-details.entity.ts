@@ -19,34 +19,34 @@ import {
     @Column({ length: 45 })
     item_colour: string;
   
-    @Column()
-    car_model: number;
-  
-    @Column()
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    car_model: string;
+    
+    @Column({ type: 'float', nullable: true })
     hsn: number;
   
-    @Column('float')
+    @Column({ type: 'float', nullable: true })
     gst: number;
   
-    @Column('float')
+    @Column({ type: 'float', default: 0 })
     rate: number;
   
-    @Column()
+    @Column({ type: 'int', default: 0 })
     maintain_stock: number;
   
-    @Column()
+    @Column({ type: 'int', default: 0 })
     stock_control: number;
   
-    @Column()
+    @Column({ type: 'int', default: 0 })
     Qc_stock_control: number;
   
-    @Column()
+    @Column({ type: 'int', default: 0 })
     wp_stock_control: number;
   
-    @Column()
+    @Column({ type: 'int', default: 0 })
     qc_requried: number;
   
-    @Column()
+    @Column({ type: 'int', default: 0 })
     active: number;
   
     @OneToOne(() => Item, (item) => item.details)
