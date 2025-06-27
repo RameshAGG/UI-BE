@@ -6,34 +6,73 @@ import { Response } from 'express';
 export class RfqController {
   constructor(private readonly rfqService: RfqService) { }
 
+  // @Get('download/:purchaseRequestId')
+  // async downloadRfq(
+  //   @Param('purchaseRequestId') purchaseRequestId: string,
+  //   @Res() res: Response,
+  // ) {
+  //   try {
+  //     const supplierFiles = await this.rfqService.generateRfqExcelsBySupplier(Number(purchaseRequestId));
+
+  //     if (supplierFiles.length === 0) {
+  //       return res.status(404).send('No suppliers found for this purchase request');
+  //     }
+
+  //     // Return supplier files info for frontend to handle multiple downloads
+  //     res.json({
+  //       success: true,
+  //       message: `Found ${supplierFiles.length} supplier(s)`,
+  //       suppliers: supplierFiles.map(file => ({
+  //         supplierId: file.supplierId,
+  //         supplierName: file.supplierName,
+  //         filename: file.filename,
+  //         downloadUrl: `/rfq/download/${purchaseRequestId}/supplier/${file.supplierId}`
+  //       }))
+  //     });
+  //   } catch (error) {
+  //     console.error('Error generating RFQ files:', error);
+  //     res.status(500).json({ success: false, message: 'Error generating RFQ files' });
+  //   }
+  // }
+
+
   @Get('download/:purchaseRequestId')
   async downloadRfq(
-    @Param('purchaseRequestId') purchaseRequestId: string,
-    @Res() res: Response,
+      @Param('purchaseRequestId') purchaseRequestId: string,
+      @Res() res: Response,
   ) {
-    try {
-      const supplierFiles = await this.rfqService.generateRfqExcelsBySupplier(Number(purchaseRequestId));
-
-      if (supplierFiles.length === 0) {
-        return res.status(404).send('No suppliers found for this purchase request');
+      try {
+          const supplierFiles = await this.rfqService.generateRfqExcelsBySupplier(Number(purchaseRequestId));
+  
+          // Return supplier files info for frontend to handle multiple downloads
+          res.json({
+              success: true,
+              message: `Found ${supplierFiles.length} supplier(s)`,
+              suppliers: supplierFiles.map(file => ({
+                  supplierId: file.supplierId,
+                  supplierName: file.supplierName,
+                  filename: file.filename,
+                  downloadUrl: `/rfq/download/${purchaseRequestId}/supplier/${file.supplierId}`
+              }))
+          });
+      } catch (error) {
+          console.error('Error generating RFQ files:', error);
+          if (error.message.includes('No valid suppliers')) {
+              res.status(404).json({ 
+                  success: false, 
+                  message: error.message 
+              });
+          } else {
+              res.status(500).json({ 
+                  success: false, 
+                  message: 'Error generating RFQ files' 
+              });
+          }
       }
-
-      // Return supplier files info for frontend to handle multiple downloads
-      res.json({
-        success: true,
-        message: `Found ${supplierFiles.length} supplier(s)`,
-        suppliers: supplierFiles.map(file => ({
-          supplierId: file.supplierId,
-          supplierName: file.supplierName,
-          filename: file.filename,
-          downloadUrl: `/rfq/download/${purchaseRequestId}/supplier/${file.supplierId}`
-        }))
-      });
-    } catch (error) {
-      console.error('Error generating RFQ files:', error);
-      res.status(500).json({ success: false, message: 'Error generating RFQ files' });
-    }
   }
+
+
+
 
   // Optional: Individual supplier download endpoint
   @Get('download/:purchaseRequestId/supplier/:supplierId')

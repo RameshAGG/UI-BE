@@ -21,6 +21,12 @@ import { ItemUploadModule } from './item_upload/item_upload.module';
 import { RfqModule } from './rfq/rfq.module';
 import { RfqDataModule } from './rfq-data/rfq-data.module';
 
+// import { DashboardModuleModule } from './dashboard-module/dashboard-module.module';
+// import { DashboardServiceService } from './dashboard-service/dashboard-service.service';
+// import { DashboardControllerController } from './dashboard-controller/dashboard-controller.controller';
+
+import { DashboardModule } from './dashboard/dashboard.module';
+
 
 @Module({
   imports: [
@@ -47,14 +53,17 @@ import { RfqDataModule } from './rfq-data/rfq-data.module';
     ItemUploadModule,
     RfqModule,
     RfqDataModule,
+    DashboardModule,
   ],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
     },
+    // DashboardServiceService,
     // ItemPriceUploadService,
     // SuggestionSupplierService,
   ],
+  // controllers: [DashboardControllerController],
 })
 export class AppModule { }

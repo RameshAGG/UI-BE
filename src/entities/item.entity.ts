@@ -54,7 +54,7 @@ export class Item {
 
 
     @ManyToOne(() => Supplier, { nullable: true })
-    @JoinColumn({ name: 'supplier_id' })
+    @JoinColumn({ name: 'id' })
     supplier: Supplier;
 
 

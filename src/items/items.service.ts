@@ -91,6 +91,8 @@ export class ItemsService {
         ],
       });
 
+      console.log(items);
+
       return {
         success: true,
         data: items,

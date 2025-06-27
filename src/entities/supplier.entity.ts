@@ -38,11 +38,5 @@ export class Supplier {
   })
   details: SupplierDetails;
 
-  // @OneToMany(() => Item, (item) => item.supplier)
-  // items: Item[];
-
-
-  // @ManyToOne(() => Organisation) // optional
-  // @JoinColumn({ name: 'organisation_id' })
-  // organisation: Organisation;
 }
+

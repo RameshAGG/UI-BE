@@ -19,10 +19,29 @@ export class ItemPriceService {
     private readonly itemRepository: Repository<Item>
   ) {}
 
+  // async findAll(): Promise<ApiResponse<ItemPrice[]>> {
+  //   const prices = await this.itemPriceRepository.find({
+  //     relations: ['supplier', 'item'],
+  //   });
+  //   return {
+  //     success: true,
+  //     data: prices,
+  //     message: 'Item prices fetched successfully',
+  //     statusCode: 200,
+  //   };
+  // }
+
+
   async findAll(): Promise<ApiResponse<ItemPrice[]>> {
     const prices = await this.itemPriceRepository.find({
-      relations: ['supplier', 'item'],
+      relations: [
+        'supplier', 
+        'item',
+        'item.itemGroup', // Make sure these match your entity property names
+        'item.itemSubGroup'
+      ],
     });
+    
     return {
       success: true,
       data: prices,
@@ -30,6 +49,7 @@ export class ItemPriceService {
       statusCode: 200,
     };
   }
+  
 
   async findOne(id: number): Promise<ApiResponse<ItemPrice>> {
     const price = await this.itemPriceRepository.findOne({

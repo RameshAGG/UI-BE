@@ -1233,63 +1233,147 @@ export class RfqService {
   }
 
 
+  // async generateRfqExcelsBySupplier(purchaseRequestId: number): Promise<SupplierFile[]> {
+  //   // Get all PR details for this request with related items and suppliers
+  //   const prDetails = await this.prDetailsRepository.find({
+  //     where: { purchase_request: { id: purchaseRequestId } },
+  //     relations: ['item', 'supplier', 'suggestion_item', 'suggestion_supplier'],
+  //   });
+
+  //   // Group data by supplier
+  //   const supplierData = new Map();
+
+  //   prDetails.forEach(detail => {
+  //     const supplier = detail.supplier || detail.suggestion_supplier;
+  //     if (!supplier) return;
+
+  //     const supplierId = supplier.id;
+  //     const supplierName = supplier.name;
+  //     const supplierCode = supplier.code;
+
+  //     if (!supplierData.has(supplierId)) {
+  //       supplierData.set(supplierId, {
+  //         id: supplierId,
+  //         name: supplierName,
+  //         code: supplierCode,
+  //         items: new Map()
+  //       });
+  //     }
+
+  //     const itemKey = detail.item.id;
+  //     if (!supplierData.get(supplierId).items.has(itemKey)) {
+  //       supplierData.get(supplierId).items.set(itemKey, {
+  //         itemName: detail.item.item_name,
+  //         itemCode: detail.item.item_code,
+  //         uom: detail.item.uom,
+  //         quantity: detail.quantity,
+  //       });
+  //     }
+  //   });
+
+  //   // Generate Excel file for each supplier
+  //   const supplierFiles: SupplierFile[] = [];
+
+  //   for (const [supplierId, supplier] of supplierData) {
+  //     const buffer = await this.generateExcelForSingleSupplier(
+  //       purchaseRequestId,
+  //       supplier
+  //     );
+
+  //     supplierFiles.push({
+  //       filename: `RFQ_${purchaseRequestId}_${supplier.name.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`,
+  //       buffer,
+  //       supplierId: supplier.id,
+  //       supplierName: supplier.name
+  //     });
+  //   }
+
+  //   return supplierFiles;
+  // }
+
+
+
   async generateRfqExcelsBySupplier(purchaseRequestId: number): Promise<SupplierFile[]> {
     // Get all PR details for this request with related items and suppliers
     const prDetails = await this.prDetailsRepository.find({
-      where: { purchase_request: { id: purchaseRequestId } },
-      relations: ['item', 'supplier', 'suggestion_item', 'suggestion_supplier'],
+        where: { purchase_request: { id: purchaseRequestId } },
+        relations: ['item', 'supplier', 'suggestion_item', 'suggestion_supplier'],
     });
 
     // Group data by supplier
     const supplierData = new Map();
 
     prDetails.forEach(detail => {
-      const supplier = detail.supplier || detail.suggestion_supplier;
-      if (!supplier) return;
+        // Skip if no item is associated
+        if (!detail.item && !detail.suggestion_item) {
+            console.warn(`PR detail ${detail.id} has no associated item`);
+            return;
+        }
 
-      const supplierId = supplier.id;
-      const supplierName = supplier.name;
-      const supplierCode = supplier.code;
+        const supplier = detail.supplier || detail.suggestion_supplier;
+        if (!supplier) {
+            console.warn(`PR detail ${detail.id} has no associated supplier`);
+            return;
+        }
 
-      if (!supplierData.has(supplierId)) {
-        supplierData.set(supplierId, {
-          id: supplierId,
-          name: supplierName,
-          code: supplierCode,
-          items: new Map()
-        });
-      }
+        const supplierId = supplier.id;
+        const supplierName = supplier.name;
+        const supplierCode = supplier.code;
 
-      const itemKey = detail.item.id;
-      if (!supplierData.get(supplierId).items.has(itemKey)) {
-        supplierData.get(supplierId).items.set(itemKey, {
-          itemName: detail.item.item_name,
-          itemCode: detail.item.item_code,
-          uom: detail.item.uom,
-          quantity: detail.quantity,
-        });
-      }
+        if (!supplierData.has(supplierId)) {
+            supplierData.set(supplierId, {
+                id: supplierId,
+                name: supplierName,
+                code: supplierCode,
+                items: new Map()
+            });
+        }
+
+        // Use either item or suggestion_item
+        const item = detail.item || detail.suggestion_item;
+        const itemKey = item.id;
+        
+        if (!supplierData.get(supplierId).items.has(itemKey)) {
+            supplierData.get(supplierId).items.set(itemKey, {
+                itemName: item.item_name,
+                itemCode: item.item_code || '', // Handle possible null
+                uom: item.uom || 'EA', // Default to 'EA' if null
+                quantity: detail.quantity,
+            });
+        }
     });
 
     // Generate Excel file for each supplier
     const supplierFiles: SupplierFile[] = [];
 
     for (const [supplierId, supplier] of supplierData) {
-      const buffer = await this.generateExcelForSingleSupplier(
-        purchaseRequestId,
-        supplier
-      );
+        try {
+            const buffer = await this.generateExcelForSingleSupplier(
+                purchaseRequestId,
+                supplier
+            );
 
-      supplierFiles.push({
-        filename: `RFQ_${purchaseRequestId}_${supplier.name.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`,
-        buffer,
-        supplierId: supplier.id,
-        supplierName: supplier.name
-      });
+            supplierFiles.push({
+                filename: `RFQ_${purchaseRequestId}_${supplier.name.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`,
+                buffer,
+                supplierId: supplier.id,
+                supplierName: supplier.name
+            });
+        } catch (error) {
+            console.error(`Error generating RFQ for supplier ${supplierId}:`, error);
+            // Continue with other suppliers even if one fails
+        }
+    }
+
+    if (supplierFiles.length === 0) {
+        throw new Error('No valid suppliers with items found for this purchase request');
     }
 
     return supplierFiles;
-  }
+}
+
+
+
 
   async generateRfqExcelForSupplier(purchaseRequestId: number, supplierId: number): Promise<ExcelJS.Buffer> {
     // Get PR details for specific supplier

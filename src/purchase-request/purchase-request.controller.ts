@@ -33,10 +33,7 @@ export class PurchaseRequestController {
     return this.purchaseRequestService.createPurchaseRequest(data);
   }
 
-  // @Get()
-  // async findAll() {
-  //   return this.purchaseRequestService.findAll();
-  // }
+
 
   @Get()
   async findAll(
@@ -54,29 +51,6 @@ export class PurchaseRequestController {
       sortOrder: parseInt(sortOrder ?? '1'),
     });
   }
-
-
-//   @Get()
-// async findAll(
-//   @Query('searchInput') searchInput?: string,
-//   @Query('offset') offset?: string,
-//   @Query('limit') limit?: string,
-//   @Query('sortField') sortField?: string,
-//   @Query('sortOrder') sortOrder?: string
-// ) {
-//   // Validate and parse pagination parameters
-//   const parsedOffset = Math.max(0, parseInt(offset ?? '0') || 0);
-//   const parsedLimit = Math.min(100, Math.max(1, parseInt(limit ?? '10') || 10));
-//   const parsedSortOrder = parseInt(sortOrder ?? '1') >= 0 ? 1 : -1;
-
-//   return this.purchaseRequestService.findAll({
-//     searchInput,
-//     offset: parsedOffset,
-//     limit: parsedLimit,
-//     sortField,
-//     sortOrder: parsedSortOrder,
-//   });
-// }
 
 
   @Get(':id')
